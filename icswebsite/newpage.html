@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ICS Academic Repository</title>
+
+  <!-- Fonts & Preconnects -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://drive.google.com">
+  <link rel="preconnect" href="https://docs.google.com">
+
+  <style>
+    :root {
+      /* Light theme */
+      --background: #f5f7fb;
+      --surface: #ffffff;
+      --tile-bg: #1e40af;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --secondary: #dbe1f9;       /* sidebar buttons */
+      --secondary-hover: #c7cff5; /* hover */
+      --border: #e5e7eb;
+      --ring: #c7d2fe;
+      --shadow: 0 8px 24px rgba(2, 6, 23, 0.08);
+      --radius: 10px;
+      --wave-a: #2c1e92;
+      --wave-b: #e27478;
+      --avatar-size: 120px;      /* circle diameter (increase to 140px/160px if you want even bigger) */
+  --avatar-ring: 4px;        /* white ring thickness around the photos */
+  --wave-height: 180px;      /* height of the SVG waves */
+  --credits-pad-y: 96px;  
+    }
+
+    /* Improved dark mode palette (higher contrast + softer surfaces) */
+    [data-theme="dark"] {
+      --background: #0b1323;     /* page background */
+      --surface:    #101b30;     /* cards/surfaces */
+      --tile-bg:    #122b57;     /* tile top (indigo-500) */
+      --text:       #e8eef8;     /* primary text */
+      --muted:      #9fb0c3;     /* secondary text */
+      --primary:    #7aa2ff;     /* buttons */
+      --secondary:  #132441;     /* sidebar tabs */
+      --secondary-hover:#18345e; /* sidebar hover */
+      --border:     #21324a;     /* subtle borders */
+      --ring:       #3b6cf6;     /* focus ring */
+      --shadow:     0 12px 28px rgba(0,0,0,.45);
+      --wave-a:     #243b6b;     /* footer wave 1 */
+      --wave-b:     #b24a6a;     /* footer wave 2 */
+    }
+
+    *{box-sizing:border-box;font-family:"Roboto",sans-serif}
+    body{margin:0;background:var(--background);color:var(--text);display:flex;flex-direction:column;min-height:100vh}
+
+    /* Navbar */
+    nav{background:linear-gradient(90deg,#2c1e92 0%,#e27478 100%);color:#fff;padding:.8rem 1rem;font-weight:700;display:flex;align-items:center;gap:12px}
+    nav img{height:40px}
+    .nav-spacer{flex:1}
+    .theme-toggle{border:1px solid rgba(255,255,255,.6);background:rgba(255,255,255,.15);color:#fff;padding:.45rem .75rem;border-radius:999px;cursor:pointer;font-weight:800}
+    .theme-toggle:hover{background:rgba(255,255,255,.25)}
+
+    /* Tiles */
+    .course-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;padding:20px}
+    .course-tile{display:grid;grid-template-rows:1fr 1fr;height:220px;border-radius:6px;box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--border)}
+    .tile-top{background:var(--tile-bg);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.15rem}
+    .tile-bottom{background:var(--surface);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px}
+    .course-name{font-size:1rem;font-weight:600;color:var(--text);text-align:center}
+    .course-btn{padding:.5rem 1rem;border:1px solid var(--border);background:var(--secondary);color:var(--text);border-radius:8px;font-weight:700;cursor:pointer}
+    .course-btn:hover{background:var(--secondary-hover)}
+
+    /* Detail view */
+    .detail-container{display:none;grid-template-columns:300px 1fr;gap:16px;padding:16px}
+    .sidebar{display:flex;flex-direction:column;gap:12px}
+    .tabs-main,.tabs-sub{display:flex;flex-direction:column;gap:10px}
+    .tabs-sub{margin-top:6px;padding-top:6px;border-top:1px dashed var(--border)}
+    .tab-btn{width:100%;background:var(--secondary);border:none;border-radius:12px;padding:12px;font-weight:800;text-align:left;cursor:pointer;color:var(--text);transition:background .2s}
+    .tab-btn:hover{background:var(--secondary-hover)}
+    .tab-btn.active{background:linear-gradient(180deg, rgba(59,108,246,.18), rgba(59,108,246,.10)); outline:1px solid var(--border)}
+    .subtab-btn{width:92%;background:var(--secondary);border:none;border-radius:999px;padding:9px 12px;font-weight:700;text-align:left;cursor:pointer;color:var(--text);margin-left:8%}
+    .subtab-btn:hover{background:var(--secondary-hover)}
+    .subtab-btn.active{background:linear-gradient(180deg, rgba(59,108,246,.18), rgba(59,108,246,.10));outline:1px solid var(--border)}
+
+    .content{padding-right:16px}
+    .back-btn{margin-bottom:8px;padding:8px 12px;border:1px solid var(--border);background:var(--primary);color:#fff;border-radius:8px;font-weight:700;cursor:pointer}
+
+    /* Narrow list panel */
+    .content-grid{display:grid;grid-template-columns:320px 1fr;gap:16px}
+    .search{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text);outline:none}
+    .search::placeholder{color:var(--muted)}
+    .search:focus{box-shadow:0 0 0 3px var(--ring);border-color:var(--ring)}
+    .list-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:8px;max-height:calc(100vh - 220px);overflow-y:auto;max-width:320px}
+    .resource-item{padding:10px 14px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
+    .resource-item:hover{background:rgba(59,108,246,.08)}
+    .resource-title{font-weight:800;color:var(--text)}
+    .resource-meta{font-size:.82rem;color:var(--muted);margin-top:2px}
+    .preview-chip{border:1px solid var(--border);background:linear-gradient(180deg, rgba(59,108,246,.20), rgba(59,108,246,.10));border-radius:999px;padding: 4px 10px;font-weight:800;cursor:pointer;font-size:.85rem;color:var(--text)}
+
+    .preview-shell{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:14px}
+    .preview-title{font-weight:800;margin-bottom:8px;color:var(--text);font-size:1.05rem}
+    .preview-frame{width:100%;height:75vh;border:none;border-radius:10px;background:#0f172a10}
+    .preview-empty{padding:2rem;text-align:center;color:var(--muted)}
+
+    /* Footer credits with waves */
+    /* Footer credits with waves */
+.credits-footer{
+  position:relative;width:100%;overflow:hidden;
+  background:linear-gradient(135deg,var(--wave-a),var(--wave-b));
+  color:#fff;margin-top:auto;
+}
+.credits-footer .waves{position:absolute;left:0;top:-1px;width:100%;height:var(--wave-height);}
+.credits-footer .waves svg{position:absolute;left:0;top:0;width:100%;height:100%}
+.credits-footer .wave-a path{fill:var(--wave-a);opacity:.85}
+.credits-footer .wave-b path{fill:var(--wave-b);opacity:.75}
+
+/* Bigger inner area */
+.credits-inner{
+  position:relative;z-index:2;max-width:1200px;margin:0 auto;
+  padding:var(--credits-pad-y) 24px 48px;
+}
+
+/* Title */
+.credits-title{font-weight:800;letter-spacing:.4px;margin:0 0 16px;font-size:1rem;opacity:.92}
+
+/* Avatars */
+.credits-avatars{display:flex;justify-content:center;gap:36px;flex-wrap:wrap}
+.credits-avatars .credit{display:flex;flex-direction:column;align-items:center;gap:12px}
+.credits-avatars .avatar{
+  width: 160px;; height:160px;
+  border-radius:50%; object-fit:cover;
+  border:var(--avatar-ring) solid rgba(255,255,255,.90);
+  box-shadow:0 10px 22px rgba(0,0,0,.28);
+  /* optional hover pop */
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.credits-avatars .avatar:hover{
+  transform:scale(1.03);
+  box-shadow:0 14px 28px rgba(0,0,0,.32);
+}
+.credits-avatars .name{
+  font-weight:800; font-size:1.05rem; color:#fff;
+  text-shadow:0 1px 2px rgba(0,0,0,.35); text-align:center;
+}
+
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav>
+    <img src="logo.png" alt="ICS Logo"/>
+    ICS Academic Repository
+    <div class="nav-spacer"></div>
+    <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">🌙 Dark</button>
+  </nav>
+
+  <!-- Tiles -->
+  <div class="course-grid" id="courseGrid"></div>
+
+  <!-- Detail View -->
+  <div class="detail-container" id="detailView">
+    <aside class="sidebar">
+      <div class="tabs-main" id="tabsMain"></div>
+      <div class="tabs-sub" id="tabsSub"></div>
+    </aside>
+
+    <main class="content">
+      <button class="back-btn" id="backBtn">← Back to Courses</button>
+      <h2 id="courseHeading">Select a section</h2>
+      <div class="content-grid">
+        <div>
+          <input id="searchInput" class="search" placeholder="Search titles... (press Enter)"/>
+          <div id="listCard" class="list-card" style="margin-top:10px"><div id="list"></div></div>
+        </div>
+        <div class="preview-shell">
+          <div id="previewTitle" class="preview-title">No item selected</div>
+          <iframe id="preview" class="preview-frame" title="Preview"></iframe>
+          <div id="emptyState" class="preview-empty">Choose a file from the list to preview it here.</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Credits Footer -->
+  <footer id="creditsFooter" class="credits-footer">
+    <div class="waves">
+      <svg class="wave-a" viewBox="0 0 1440 120" preserveAspectRatio="none"><path d="M0,64 C240,96 480,0 720,32 C960,64 1200,128 1440,96 L1440,0 L0,0 Z"></path></svg>
+      <svg class="wave-b" viewBox="0 0 1440 120" preserveAspectRatio="none"><path d="M0,96 C240,128 480,64 720,80 C960,96 1200,80 1440,112 L1440,0 L0,0 Z"></path></svg>
+    </div>
+    <div class="credits-inner">
+      <h3 class="credits-title">Credits : ICS Web Team </h3>
+      <div class="credits-avatars">
+        <div class="credit"><img src="ketan.jpg"   alt="Ketan Aggarwal" class="avatar"><div class="name">Ketan Aggarwal</div></div>
+        <div class="credit"><img src="alok.jpg"    alt="Aalok"           class="avatar"><div class="name">Alok</div></div>
+        <div class="credit"><img src="srushtij.jpg" alt="Srushti Jagtap" class="avatar"><div class="name">Srushti Jagtap</div></div>
+        <div class="credit"><img src="muragesh.jpg"alt="Muragesh"       class="avatar"><div class="name">Muragesh</div></div>
+        <div class="credit"><img src="aman.jpg"    alt="Aman Sheoran"   class="avatar"><div class="name">Aman Sheoran</div></div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Data file -->
+  <script src="data.js"></script>
+
+  <!-- App -->
+  <script>
+    // Elements
+    const courseGrid   = document.getElementById("courseGrid");
+    const detailView   = document.getElementById("detailView");
+    const tabsMain     = document.getElementById("tabsMain");
+    const tabsSub      = document.getElementById("tabsSub");
+    const courseHeading= document.getElementById("courseHeading");
+    const list         = document.getElementById("list");
+    const preview      = document.getElementById("preview");
+    const previewTitle = document.getElementById("previewTitle");
+    const emptyState   = document.getElementById("emptyState");
+    const searchInput  = document.getElementById("searchInput");
+    const backBtn      = document.getElementById("backBtn");
+    const themeToggle  = document.getElementById("themeToggle");
+    const credits      = document.getElementById("creditsFooter");
+    const htmlEl       = document.documentElement;
+
+    // State
+    let currentCourse = null, currentMain = null, currentSub = null;
+    let allItemsCache = [], filteredItems = [];
+
+    // Theme persist
+    const savedTheme = localStorage.getItem('ics-theme');
+    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)){
+      htmlEl.setAttribute('data-theme','dark');
+      themeToggle.textContent = '☀️ Light';
+    }
+    themeToggle.addEventListener('click', ()=>{
+      const dark = htmlEl.getAttribute('data-theme') === 'dark';
+      htmlEl.setAttribute('data-theme', dark ? 'light' : 'dark');
+      localStorage.setItem('ics-theme', dark ? 'light' : 'dark');
+      themeToggle.textContent = dark ? '🌙 Dark' : '☀️ Light';
+    });
+
+    // Utils
+    function escapeHTML(str){return String(str).replace(/[&<>"]/g, s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[s]));}
+    function isDrive(url){return /drive\.google\.com\//i.test(url);} 
+    function isNative(url){return /\.(pdf|png|jpe?g|gif|webp|mp4|mp3|wav|m4a)(\?|#|$)/i.test(url);} 
+    function buildPreviewURL(url){ if(isDrive(url)) return url.replace('/view','/preview'); if(isNative(url)) return url; return `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`; }
+
+    function collectFiles(node, path=[], out=[]){
+      if(!node) return out;
+      if(Array.isArray(node)){ node.forEach(it=>out.push({...it, _path:path.join(' / ')})); return out; }
+      if(typeof node==='object'){
+        if(Array.isArray(node.files)) node.files.forEach(f=>out.push({...f,_path:path.join(' / ')}));
+        Object.keys(node).forEach(k=>{ if(k!=='files') collectFiles(node[k], path.concat(k), out); });
+      }
+      return out;
+    }
+
+    // Build tiles
+    function loadCourses(){
+      courseGrid.innerHTML = "";
+      if(typeof data !== 'object' || !data){
+        courseGrid.innerHTML = '<div style="padding:1rem;color:crimson;font-weight:700">Error: data.js must define <code>const data = {...}</code></div>';
+        return;
+      }
+      Object.keys(data).forEach(code=>{
+        const course = data[code];
+        const card = document.createElement('div');
+        card.className = 'course-tile';
+        card.innerHTML = `
+          <div class="tile-top">${escapeHTML(course.code || code)}</div>
+          <div class="tile-bottom">
+            <div class="course-name">${escapeHTML(course.name || '')}</div>
+            <button class="course-btn">Access Course</button>
+          </div>`;
+        card.querySelector('.course-btn').addEventListener('click',()=>openCourse(course));
+        courseGrid.appendChild(card);
+      });
+      credits.style.display='block';
+    }
+
+    // Tab helpers
+    function mkMainTab(name){ const b=document.createElement('button'); b.className='tab-btn'; b.textContent=name; b.addEventListener('click',()=>selectMain(name)); return b; }
+    function mkSubTab(name){ const b=document.createElement('button'); b.className='subtab-btn'; b.textContent=name; b.addEventListener('click',()=>selectSub(name)); return b; }
+
+    // Decide if subtabs should show (hide numeric/flat arrays & specific sections)
+    function shouldShowSubtabs(name, node){
+      const deny = ['quizzes','quiz','quizzes and endsem','pyqs','pyq'];
+      if(deny.includes(String(name).toLowerCase())) return false;
+      if(!node || typeof node!== 'object' || Array.isArray(node)) return false;
+      const subKeys = Object.keys(node).filter(k=> k!=='files' && !Array.isArray(node[k]) && !/^\d+$/.test(k));
+      return subKeys.length >= 2; // only if 2+ real categories
+    }
+
+    function selectMain(name){
+      currentMain = name; currentSub = null;
+      Array.from(tabsMain.querySelectorAll('.tab-btn')).forEach(x=>x.classList.remove('active'));
+      const active = Array.from(tabsMain.querySelectorAll('.tab-btn')).find(x=>x.textContent===name);
+      if(active) active.classList.add('active');
+
+      tabsSub.innerHTML='';
+      if(name!== 'All'){
+        const node = currentCourse.resources?.[name];
+        if(shouldShowSubtabs(name, node)){
+          const subKeys = Object.keys(node).filter(k=> k!=='files' && !Array.isArray(node[k]) && !/^\d+$/.test(k));
+          const allSub = mkSubTab('All in '+name);
+          tabsSub.appendChild(allSub);
+          subKeys.forEach(k=> tabsSub.appendChild(mkSubTab(k)));
+          setTimeout(()=> allSub.click());
+        }
+      }
+      renderForCurrentSelection();
+    }
+
+    function selectSub(name){
+      currentSub = name;
+      Array.from(tabsSub.querySelectorAll('.subtab-btn')).forEach(x=>x.classList.remove('active'));
+      const active = Array.from(tabsSub.querySelectorAll('.subtab-btn')).find(x=>x.textContent===name);
+      if(active) active.classList.add('active');
+      renderForCurrentSelection();
+    }
+
+    function renderForCurrentSelection(){
+      let items=[];
+      if(currentMain==='All'){
+        items = collectFiles(currentCourse.resources,[]);
+      }else{
+        const mainNode = currentCourse.resources?.[currentMain];
+        if(!currentSub || currentSub===('All in '+currentMain)){
+          items = collectFiles(mainNode,[currentMain]);
+        }else{
+          const subNode = mainNode?.[currentSub];
+          items = collectFiles(subNode,[currentMain,currentSub]);
+        }
+      }
+      allItemsCache = items.slice();
+      filteredItems = items;
+      renderList(filteredItems);
+      setPreview(null);
+      searchInput.value='';
+    }
+
+    function renderList(items){
+      list.innerHTML='';
+      if(!items || items.length===0){ list.innerHTML='<div class="preview-empty">No items</div>'; return; }
+      items.forEach(it=>{
+        const row=document.createElement('div');
+        row.className='resource-item';
+        row.innerHTML=`
+          <div>
+            <div class="resource-title">${escapeHTML(it.title||'Untitled')}</div>
+            <div class="resource-meta">${escapeHTML(it._path||'')}</div>
+          </div>
+          <button class="preview-chip">Preview</button>`;
+        row.querySelector('.preview-chip').addEventListener('click',()=> setPreview(it));
+        list.appendChild(row);
+      });
+    }
+
+    function setPreview(item){
+      if(!item){ preview.src=''; previewTitle.textContent='No item selected'; emptyState.style.display='block'; return; }
+      previewTitle.textContent=item.title||'Untitled';
+      emptyState.style.display='none';
+      preview.src = buildPreviewURL(String(item.link||''));
+    }
+
+    searchInput.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        const q=searchInput.value.trim().toLowerCase();
+        filteredItems = q ? allItemsCache.filter(r=> (r.title||'').toLowerCase().includes(q)) : allItemsCache.slice();
+        renderList(filteredItems); setPreview(null);
+      }
+    });
+
+    backBtn.addEventListener('click',()=>{ detailView.style.display='none'; courseGrid.style.display='grid'; credits.style.display='block'; });
+
+    function openCourse(course){
+      currentCourse = course;
+      courseGrid.style.display='none'; credits.style.display='none'; detailView.style.display='grid';
+      courseHeading.textContent = `${escapeHTML(course.code||'')} – ${escapeHTML(course.name||'')}`;
+      tabsMain.innerHTML = ""; tabsSub.innerHTML = "";
+      const allBtn = mkMainTab('All'); tabsMain.appendChild(allBtn);
+      Object.keys(course.resources || {}).forEach(k=> tabsMain.appendChild(mkMainTab(k)));
+      setTimeout(()=> allBtn.click());
+    }
+
+    // Start
+    loadCourses();
+  </script>
+ 
+
+</body>
+</html>
